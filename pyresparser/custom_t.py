@@ -45,7 +45,6 @@ def extract_text_from_pdf(pdf_path):
                     text = fake_file_handle.getvalue()
                     yield text
 
-                    # close open handles
                     converter.close()
                     fake_file_handle.close()
             except PDFSyntaxError:
@@ -201,7 +200,7 @@ nlp = spacy.load(os.path.dirname(os.path.abspath(__file__)))
 # print(text)
 # for resume in os.listdir(resumes):
 text_raw = extract_text(
-    '/home/omkarpathak27/Downloads/OmkarResume.pdf',
+    '/home/Khushi/Downloads/KhushiResume.pdf',
     '.pdf'
 )
 # entity   = extract_entity_sections_grad(text_raw)

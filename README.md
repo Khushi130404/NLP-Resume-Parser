@@ -37,10 +37,6 @@ python -m nltk.downloader words
 python -m nltk.downloader stopwords
 ```
 
-# Documentation
-
-Official documentation is available at: https://www.omkarpathak.in/pyresparser/
-
 # Supported File Formats
 
 - PDF and DOCx files are supported on all Operating Systems
