@@ -32,6 +32,7 @@ class ResumeParser(object):
             'experience': None,
             'company_names': None,
             'projects': None,
+            "responsibilities":None,
             'achievements':None,
             'no_of_pages': None,
             'total_experience': None,
@@ -104,6 +105,11 @@ class ResumeParser(object):
         # projects
         try:
             self.__details['projects'] = utils.extract_projects(self.__text_raw)
+        except KeyError:
+            pass
+
+        try:
+            self.__details['responsibilities'] = utils.extract_responsibilities(self.__text_raw)
         except KeyError:
             pass
 

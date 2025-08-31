@@ -1,3 +1,4 @@
+from email.mime import text
 import io
 import os
 import re
@@ -16,6 +17,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
+from typing import List, Dict
 
 
 def extract_text_from_pdf(pdf_path):
@@ -444,6 +446,7 @@ def extract_education(nlp_text):
             education.append((key, ''.join(year.group(0))))
         else:
             education.append(key)
+
     return education
 
 
@@ -492,48 +495,44 @@ def extract_experience(resume_text):
         for i, x in enumerate(test)
         if x and 'experience' in x.lower()
     ]
+    # return {"experience": resume_text}
     return x
 
-def extract_projects(text):
+
+import re
+
+def extract_projects(resume_text):
     """
-    Extracts project titles and descriptions from resume text.
-    Looks for keywords like 'Projects', 'Project', etc.
-    Returns a list of projects.
+    Extracts all text under the 'Projects' section until the next section header.
+    Returns a single string with all project content combined.
     """
-    project_keywords = re.compile(r'(projects?:?|project work)', re.IGNORECASE)
-    lines = text.split('\n')
-    projects = []
-    capture = False
-    buffer = []
 
-    for line in lines:
-        if project_keywords.search(line):
-            # Start capturing after "Projects:" heading
-            capture = True
-            continue
-        if capture:
-            if line.strip() == "" or re.match(r'^[A-Z ]+:$', line.strip()):  # stop at next section
-                if buffer:
-                    projects.append(" ".join(buffer).strip())
-                    buffer = []
-                capture = False
-            else:
-                buffer.append(line.strip())
+    # Define common section headers that indicate the end of the Projects section
+    section_headers = r"(experience|work experience|skills|education|certifications|achievements|summary|profile|objective)"
+    
+    # Regex to capture everything under 'Projects' until the next section header
+    pattern = rf"projects\s*[:\-]?\s*(.*?)\s*(?={section_headers}|$)"
 
-    if buffer:  # add remaining
-        projects.append(" ".join(buffer).strip())
-    return projects
+    match = re.search(pattern, resume_text, re.IGNORECASE | re.DOTALL)
+    
+    if match:
+        return match.group(1).strip()
+    return ""
 
 
-def extract_achievements(text):
+
+def extract_achievements(resume_text):
     """
     Extract achievements and awards as structured data.
     Splits by bullets (•) or numbered points, 
     captures sub-points (–) as 'details'.
     Returns list of dicts: [{'title': str, 'details': [str, ...]}, ...]
     """
-    section_pattern = re.compile(r'(achievements?|awards?|accomplishments?)', re.IGNORECASE)
-    lines = text.splitlines()
+    section_pattern = re.compile(
+        r'(' + '|'.join(map(re.escape, cs.ACHIEVEMENTS_KEYWORDS)) + r')',
+        re.IGNORECASE
+    )
+    lines = resume_text.splitlines()
     achievements = []
     in_section = False
     current_item = None
@@ -578,3 +577,60 @@ def extract_achievements(text):
         achievements.append(current_item)
 
     return achievements
+
+def extract_responsibilities(resume_text):
+    """
+    Extract positions and responsibilities as structured data.
+    Splits by bullets (•) or numbered points, 
+    captures sub-points (–) as 'details'.
+    Returns list of dicts: [{'title': str, 'details': [str, ...]}, ...]
+    """
+    section_pattern = re.compile(
+        r'(' + '|'.join(map(re.escape, cs.POSITIONS_KEYWORDS)) + r')',
+        re.IGNORECASE
+    )
+    lines = resume_text.splitlines()
+    responsibilities = []
+    in_section = False
+    current_item = None
+
+    for line in lines:
+        clean_line = line.strip()
+
+        # Detect start of Achievements section
+        if section_pattern.search(clean_line):
+            in_section = True
+            continue
+
+        if in_section:
+            # End section if another heading is found
+            if clean_line and clean_line.isupper() and len(clean_line.split()) < 5:
+                if current_item:
+                    responsibilities.append(current_item)
+                    current_item = None
+                break
+
+            # Bullet point (new achievement title)
+            if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
+                if current_item:
+                    responsibilities.append(current_item)
+                title = clean_line.lstrip("•").strip()
+                current_item = {"title": title, "details": []}
+
+            # Sub-detail line (– or normal text)
+            elif clean_line.startswith("–") or clean_line.startswith("-"):
+                if current_item:
+                    current_item["details"].append(clean_line.lstrip("–-").strip())
+
+            # Continuation text
+            elif clean_line:
+                if current_item:
+                    if not current_item["details"]:
+                        current_item["details"].append(clean_line)
+                    else:
+                        current_item["details"][-1] += " " + clean_line
+
+    if current_item:
+        responsibilities.append(current_item)
+
+    return responsibilities

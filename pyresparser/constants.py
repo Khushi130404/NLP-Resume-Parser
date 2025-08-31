@@ -28,6 +28,8 @@ PROJECT_KEYWORDS = ["projects", "academic projects", "key projects", "capstone"]
 
 ACHIEVEMENTS_KEYWORDS = ["achievements", "awards", "honors", "recognition", "certifications"]
 
+POSITIONS_KEYWORDS = ["positions","responsibility","coordinator"]
+
 RESUME_SECTIONS_PROFESSIONAL = [
                     'experience',
                     'education',
