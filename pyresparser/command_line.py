@@ -48,17 +48,6 @@ class ResumeParserCli(object):
             '--export-filepath',
             help="the export file path")
 
-    def __banner(self):
-        banner_string = r'''
-                 ____  __  __________  _________  ____  _____________  _____
-                / __ \/ / / / ___/ _ \/ ___/ __ \/ __ `/ ___/ ___/ _ \/ ___/
-               / /_/ / /_/ / /  /  __(__  ) /_/ / /_/ / /  (__  )  __/ /
-              / .___/\__, /_/   \___/____/ .___/\__,_/_/  /____/\___/_/
-             /_/    /____/              /_/
-
-           - By Khushi Patel (khushipatel130404@gmail.com)
-        '''
-        print(banner_string)
 
     def export_data(self, exported_data, args):
         '''function to export resume data in specified format

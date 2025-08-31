@@ -24,12 +24,15 @@ class ResumeParser(object):
             'name': None,
             'email': None,
             'mobile_number': None,
+            'tech_skilld':None,
             'skills': None,
             'college_name': None,
             'degree': None,
             'designation': None,
             'experience': None,
             'company_names': None,
+            'projects': None,
+            'achievements':None,
             'no_of_pages': None,
             'total_experience': None,
         }
@@ -95,6 +98,17 @@ class ResumeParser(object):
         # extract designation
         try:
             self.__details['designation'] = cust_ent['Designation']
+        except KeyError:
+            pass
+
+        # projects
+        try:
+            self.__details['projects'] = utils.extract_projects(self.__text_raw)
+        except KeyError:
+            pass
+
+        try:
+            self.__details['achievements'] = utils.extract_achievements(self.__text_raw)
         except KeyError:
             pass
 
