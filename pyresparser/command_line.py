@@ -1,5 +1,3 @@
-# Author: Omkar Pathak
-
 import os
 import json
 import argparse
@@ -58,7 +56,7 @@ class ResumeParserCli(object):
               / .___/\__, /_/   \___/____/ .___/\__,_/_/  /____/\___/_/
              /_/    /____/              /_/
 
-           - By Omkar Pathak (omkarpathak27@gmail.com)
+           - By Khushi Patel (khushipatel130404@gmail.com)
         '''
         print(banner_string)
 

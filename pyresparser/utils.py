@@ -1,5 +1,3 @@
-# Author: Omkar Pathak
-
 import io
 import os
 import re
@@ -344,7 +342,7 @@ def extract_name(nlp_text, matcher):
     '''
     pattern = [cs.NAME_PATTERN]
 
-    matcher.add('NAME', None, *pattern)
+    matcher.add('NAME', pattern)
 
     matches = matcher(nlp_text)
 

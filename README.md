@@ -26,6 +26,13 @@ python -m venv venv
 pip install pyresparser
 ```
 
+```bash
+python -m venv venv
+.\venv\Scripts\activate
+uvicorn app.main:app --reload
+http://127.0.0.1:8000/docs
+```
+
 - For NLP operations we use spacy and nltk. Install them using below commands:
 
 ```bash
