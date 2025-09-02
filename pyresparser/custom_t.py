@@ -10,7 +10,6 @@ from pdfminer.layout import LAParams
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
 
-
 def extract_text_from_pdf(pdf_path):
     '''
     Helper function to extract the plain text from .pdf files

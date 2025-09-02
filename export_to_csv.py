@@ -43,28 +43,12 @@ for root, directories, filenames in os.walk(sys.argv[1]):
         except:
             continue
 
-# writing to csv file
 df = pd.DataFrame(result, columns=fields)
 
 try:
     ranked_df = sort_candidates(sys.argv[2], df)
 
-    # Sort candidates in descending order of score
     ranked_df.sort_values(by="Score", ascending=False, inplace=True)
     ranked_df.to_csv(os.path.join(root, (datetime.today().strftime('Extracted-Resumes-%d-%m-%y.csv'))), index=False)
 except IndexError:
     df.to_csv(os.path.join(root, (datetime.today().strftime('Extracted-Resumes-%d-%m-%y.csv'))), index=False)
-
-# with open(os.path.join(root, (datetime.today().strftime('%d-%m-%y.csv'))), 'w', encoding="utf-8") as csvfile: 
-#     try:
-#         # creating a csv writer object 
-#         csvwriter = csv.writer(csvfile) 
-            
-#         # writing the fields 
-#         csvwriter.writerow(fields) 
-            
-#         # writing the data rows 
-#         csvwriter.writerows(result)
-#     except:
-#         print('Some of the file might be corrupted or is not supported by parser')
-# print(ranked_df)

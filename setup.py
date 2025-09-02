@@ -7,12 +7,6 @@ setup(
     name='pyresparser',
     version='1.0.6',
     description='A simple resume parser used for extracting information from resumes',
-    long_description=open('README.rst').read(),
-    url='https://github.com/Khushi130404/NLP-Resume-Parser',
-    author='Omkar Pathak',
-    author_email='omkarpathak27@gmail.com',
-    license='GPL-3.0',
-    include_package_data=True,
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries',
