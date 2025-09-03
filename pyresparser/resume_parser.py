@@ -1,6 +1,7 @@
 import os
 import multiprocessing as mp
 import io
+from . import constants as cs
 import spacy
 import pprint
 from spacy.matcher import Matcher
@@ -29,9 +30,7 @@ class ResumeParser(object):
             'projects': None,
             "education": None,
             "leadership":None,
-            'achievements':None,
-            'no_of_pages': None,
-            'total_experience': None,
+            'achievements':None
         }
         self.__resume = resume
         if not isinstance(self.__resume, io.BytesIO):
@@ -48,86 +47,71 @@ class ResumeParser(object):
     def get_extracted_data(self):
         return self.__details
 
+
     def __get_basic_details(self):
-        cust_ent = utils.extract_entities_wih_custom_model(
-                            self.__custom_nlp
-                        )
+        """
+        Extract all basic details from the parsed resume text.
+        Populates self.__details with structured data.
+        """
+
+        # Extract entities using custom NLP model
+        cust_ent = utils.extract_entities_wih_custom_model(self.__custom_nlp)
+
+        # Extract name (fallback to standard method if custom entity fails)
         name = utils.extract_name(self.__nlp, matcher=self.__matcher)
+
+        # Extract email and mobile
         email = utils.extract_email(self.__text)
         mobile = utils.extract_mobile_number(self.__text, self.__custom_regex)
+
+        # Extract skills
         skills = utils.extract_skills(
-                    self.__nlp,
-                    self.__noun_chunks,
-                    self.__skills_file
-                )
-        # edu = utils.extract_education(
-        #               [sent.string.strip() for sent in self.__nlp.sents]
-        #       )
+            self.__nlp,
+            self.__noun_chunks,
+            self.__skills_file
+        )
+
+        # Extract entity sections (education, projects, achievements, etc.)
         entities = utils.extract_entity_sections_grad(self.__text_raw)
 
-        try:
-            self.__details['name'] = cust_ent['Name'][0]
-        except (IndexError, KeyError):
-            self.__details['name'] = name
-
+        # Fill structured details using keyword-based matching
+        self.__details['name'] = cust_ent.get('Name', [name])[0] if cust_ent.get('Name') else name
         self.__details['email'] = email
-
         self.__details['mobile_number'] = mobile
-
         self.__details['skills'] = skills
 
-        try:
-            self.__details['education'] = utils.extract_education(entities['education'])
-        except KeyError:
-            self.__details['education'] = entities['education']
+        self.__details['education'] = utils.safe_parse_by_keywords(
+            entities, cs.EDUCATION_KEYWORDS, utils.extract_education
+        )
 
-        try:
-            self.__details['projects'] = entities['projects']
-        except KeyError:
-            pass
-
-        # try:
-        #     self.__details['projects'] = utils.extract_projects(self.__text_raw)
-        # except KeyError:
-        #     pass
-
-        # try:
-        #     self.__details['leadership'] =  utils.extract_responsibilities(entities['positions'])
-        # except KeyError:
-        #     self.__details['leadership'] = entities['positions']
-
-        # try:
-        #     self.__details['achievements'] = utils.extract_achievements(entities['achievements'])
-        # except KeyError:
-        #     self.__details['achievements'] = entities['achievements']
-
-        responsibilities_data = entities.get('positions')
-        self.__details['leadership'] = utils.extract_responsibilities(responsibilities_data) if responsibilities_data else []
-
-        achievements_data = entities.get('achievements')
-        self.__details['achievements'] = utils.extract_achievements(achievements_data) if achievements_data else []
+        self.__details['projects'] = utils.safe_parse_by_keywords(
+            entities, cs.PROJECTS_KEYWORDS
+        )
 
 
-        try:
-            self.__details['experience'] = utils.extract_experience(entities['experience'])
-        except KeyError:
-            self.__details['experience'] = entities['experience']
+        # print("**************************************************************************************")
 
-        try:
-            self.__details['links'] = utils.extract_usernames(utils.extract_links_from_pdf(self.__resume))
-        except KeyError:
-            pass
+        self.__details['leadership'] = utils.safe_parse_by_keywords(
+            entities, cs.POSITIONS_KEYWORDS, utils.extract_responsibilities
+        )
 
-        try:
-            exp = round(
-                utils.get_total_experience(entities['experience']) / 12,
-                2
-            )
-            self.__details['total_experience'] = exp
-        except KeyError:
-            self.__details['total_experience'] = 0
-            
+        print("--------------------------------------------------------------------------------")
+
+        self.__details['achievements'] = utils.safe_parse_by_keywords(
+            entities, cs.ACHIEVEMENTS_KEYWORDS, utils.extract_achievements
+        )
+
+        self.__details['experience'] = utils.safe_parse_by_keywords(
+            entities, cs.EXPERIENCE_KEYWORDS, utils.extract_experience
+        )
+
+        # Links (convert links into username mapping)
+        links = utils.extract_links_from_pdf(self.__resume)
+        self.__details['links'] = utils.extract_usernames(links) if links else {}
+
+        # Total pages
         self.__details['no_of_pages'] = utils.get_number_of_pages(self.__resume)
+
         return
 
 
@@ -155,4 +139,4 @@ if __name__ == '__main__':
 
     results = [p.get() for p in results]
 
-    pprint.pprint(results)
+    # pprint.pprint(results)

@@ -628,3 +628,26 @@ def extract_usernames(links):
         else:
             result.setdefault("Other", []).append(link)
     return result
+
+
+def find_section_key_by_keywords(entities, keywords):
+    """
+    Find the first matching key from entities based on a keyword list.
+    """
+    for key in entities.keys():
+        if any(k.lower() in key.lower() for k in keywords):
+            return key
+    return None
+
+def safe_parse_by_keywords(entities, keywords, parser=None):
+    """
+    Parse a resume section by matching keywords from entities.
+    """
+    key = find_section_key_by_keywords(entities, keywords)
+    if key:
+        data = entities.get(key, [])
+        if parser and data:
+            parsed = parser(data)
+            return parsed if parsed else data
+        return data if data else entities.get(key, "")
+    return ""
