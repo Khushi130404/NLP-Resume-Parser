@@ -24,15 +24,11 @@ class ResumeParser(object):
             'name': None,
             'email': None,
             'mobile_number': None,
-            'tech_skilld':None,
             'skills': None,
-            'college_name': None,
-            'degree': None,
-            'designation': None,
             'experience': None,
-            'company_names': None,
             'projects': None,
-            "responsibilities":None,
+            "education": None,
+            "leadership":None,
             'achievements':None,
             'no_of_pages': None,
             'total_experience': None,
@@ -86,14 +82,19 @@ class ResumeParser(object):
             self.__details['education'] = entities['education']
 
         try:
-            self.__details['projects'] = utils.extract_projects(self.__text_raw)
+            self.__details['projects'] = entities['projects']
         except KeyError:
             pass
 
         # try:
-        #     self.__details['responsibilities'] =  utils.extract_responsibilities(entities['positions'])
+        #     self.__details['projects'] = utils.extract_projects(self.__text_raw)
         # except KeyError:
-        #     self.__details['responsibilities'] = entities['positions']
+        #     pass
+
+        # try:
+        #     self.__details['leadership'] =  utils.extract_responsibilities(entities['positions'])
+        # except KeyError:
+        #     self.__details['leadership'] = entities['positions']
 
         # try:
         #     self.__details['achievements'] = utils.extract_achievements(entities['achievements'])
@@ -101,7 +102,7 @@ class ResumeParser(object):
         #     self.__details['achievements'] = entities['achievements']
 
         responsibilities_data = entities.get('positions')
-        self.__details['responsibilities'] = utils.extract_responsibilities(responsibilities_data) if responsibilities_data else []
+        self.__details['leadership'] = utils.extract_responsibilities(responsibilities_data) if responsibilities_data else []
 
         achievements_data = entities.get('achievements')
         self.__details['achievements'] = utils.extract_achievements(achievements_data) if achievements_data else []
