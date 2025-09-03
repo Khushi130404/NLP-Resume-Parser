@@ -69,34 +69,22 @@ class ResumeParser(object):
         #       )
         entities = utils.extract_entity_sections_grad(self.__text_raw)
 
-        # extract name
         try:
             self.__details['name'] = cust_ent['Name'][0]
         except (IndexError, KeyError):
             self.__details['name'] = name
 
-        # extract email
         self.__details['email'] = email
 
-        # extract mobile number
         self.__details['mobile_number'] = mobile
 
-        # extract skills
         self.__details['skills'] = skills
 
-        # extract college name
         try:
-            self.__details['college_name'] = entities['College Name']
+            self.__details['education'] = utils.extract_education(entities['education'])
         except KeyError:
-            pass
+            self.__details['education'] = entities['education']
 
-        # extract education Degree
-        try:
-            self.__details['degree'] = cust_ent['Degree']
-        except KeyError:
-            pass
-
-        # projects
         try:
             self.__details['projects'] = utils.extract_projects(self.__text_raw)
         except KeyError:

@@ -361,34 +361,27 @@ def cleanup(token, lower=True):
     return token.strip()
 
 
-def extract_education(nlp_text):
-    '''
-    Helper function to extract education from spacy nlp text
+# def extract_education(nlp_text):
+#     edu = {}
+#     try:
+#         for index, text in enumerate(nlp_text):
+#             for tex in text.split():
+#                 tex = re.sub(r'[?|$|.|!|,]', r'', tex)
+#                 if tex.upper() in cs.EDUCATION and tex not in cs.STOPWORDS:
+#                     edu[tex] = text + nlp_text[index + 1]
+#     except IndexError:
+#         pass
 
-    :param nlp_text: object of `spacy.tokens.doc.Doc`
-    :return: tuple of education degree and year if year if found
-             else only returns education degree
-    '''
-    edu = {}
-    try:
-        for index, text in enumerate(nlp_text):
-            for tex in text.split():
-                tex = re.sub(r'[?|$|.|!|,]', r'', tex)
-                if tex.upper() in cs.EDUCATION and tex not in cs.STOPWORDS:
-                    edu[tex] = text + nlp_text[index + 1]
-    except IndexError:
-        pass
+#     # Extract year
+#     education = []
+#     for key in edu.keys():
+#         year = re.search(re.compile(cs.YEAR), edu[key])
+#         if year:
+#             education.append((key, ''.join(year.group(0))))
+#         else:
+#             education.append(key)
 
-    # Extract year
-    education = []
-    for key in edu.keys():
-        year = re.search(re.compile(cs.YEAR), edu[key])
-        if year:
-            education.append((key, ''.join(year.group(0))))
-        else:
-            education.append(key)
-
-    return education
+#     return education
 
 
 # def extract_experience(resume_text):
@@ -438,6 +431,31 @@ def extract_education(nlp_text):
 #     ]
 #     # return {"experience": resume_text}
 #     return x
+
+
+def extract_education(education_section):
+    parsed_education = []
+    current_entry = {}
+
+    for item in education_section:
+        clean_item = item.lstrip("•").strip()
+
+        if "-" in clean_item and any(c.isdigit() for c in clean_item):
+            current_entry["years"] = clean_item
+
+        elif item.startswith("•"):
+            if current_entry:
+                parsed_education.append(current_entry)
+                current_entry = {}
+            current_entry["institution"] = clean_item
+
+        else:
+            current_entry["degree"] = clean_item
+
+    if current_entry:
+        parsed_education.append(current_entry)
+
+    return parsed_education
 
 
 def extract_experience(resume_lines):
