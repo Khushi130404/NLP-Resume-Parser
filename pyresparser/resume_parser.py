@@ -96,12 +96,6 @@ class ResumeParser(object):
         except KeyError:
             pass
 
-        # extract designation
-        try:
-            self.__details['designation'] = cust_ent['Designation']
-        except KeyError:
-            pass
-
         # projects
         try:
             self.__details['projects'] = utils.extract_projects(self.__text_raw)
@@ -109,20 +103,14 @@ class ResumeParser(object):
             pass
 
         try:
-            self.__details['responsibilities'] = utils.extract_responsibilities(self.__text_raw)
+            self.__details['responsibilities'] =  utils.extract_responsibilities(entities['positions'])
         except KeyError:
-            pass
+            self.__details['responsibilities'] = entities['positions']
 
         try:
-            self.__details['achievements'] = utils.extract_achievements(self.__text_raw)
+            self.__details['achievements'] = utils.extract_achievements(entities['achievements'])
         except KeyError:
-            pass
-
-        # extract company names
-        try:
-            self.__details['company_names'] = cust_ent['Companies worked at']
-        except KeyError:
-            pass
+            self.__details['achievements'] = entities['achievements']
 
         try:
             self.__details['experience'] = entities['experience']

@@ -21,15 +21,8 @@ from typing import List, Dict
 
 
 def extract_text_from_pdf(pdf_path):
-    '''
-    Helper function to extract the plain text from .pdf files
-
-    :param pdf_path: path to PDF file to be extracted (remote or local)
-    :return: iterator of string of extracted text
-    '''
-    # https://www.blog.pythonlibrary.org/2018/05/03/exporting-data-from-pdfs-with-python/
+    
     if not isinstance(pdf_path, io.BytesIO):
-        # extract text from local pdf file
         with open(pdf_path, 'rb') as fh:
             try:
                 for page in PDFPage.get_pages(
@@ -54,13 +47,11 @@ def extract_text_from_pdf(pdf_path):
                     text = fake_file_handle.getvalue()
                     yield text
 
-                    # close open handles
                     converter.close()
                     fake_file_handle.close()
             except PDFSyntaxError:
                 return
     else:
-        # extract text from remote pdf file
         try:
             for page in PDFPage.get_pages(
                     pdf_path,
@@ -84,7 +75,6 @@ def extract_text_from_pdf(pdf_path):
                 text = fake_file_handle.getvalue()
                 yield text
 
-                # close open handles
                 converter.close()
                 fake_file_handle.close()
         except PDFSyntaxError:
@@ -94,7 +84,6 @@ def extract_text_from_pdf(pdf_path):
 def get_number_of_pages(file_name):
     try:
         if isinstance(file_name, io.BytesIO):
-            # for remote pdf file
             count = 0
             for page in PDFPage.get_pages(
                         file_name,
@@ -104,7 +93,6 @@ def get_number_of_pages(file_name):
                 count += 1
             return count
         else:
-            # for local pdf file
             if file_name.endswith('.pdf'):
                 count = 0
                 with open(file_name, 'rb') as fh:
@@ -122,12 +110,6 @@ def get_number_of_pages(file_name):
 
 
 def extract_text_from_docx(doc_path):
-    '''
-    Helper function to extract plain text from .docx files
-
-    :param doc_path: path to .docx file to be extracted
-    :return: string of extracted text
-    '''
     try:
         temp = docx2txt.process(doc_path)
         text = [line.replace('\t', ' ') for line in temp.split('\n') if line]
@@ -137,12 +119,6 @@ def extract_text_from_docx(doc_path):
 
 
 def extract_text_from_doc(doc_path):
-    '''
-    Helper function to extract plain text from .doc files
-
-    :param doc_path: path to .doc file to be extracted
-    :return: string of extracted text
-    '''
     try:
         try:
             import textract
@@ -155,13 +131,6 @@ def extract_text_from_doc(doc_path):
 
 
 def extract_text(file_path, extension):
-    '''
-    Wrapper function to detect the file extension and call text
-    extraction function accordingly
-
-    :param file_path: path of file of which text is to be extracted
-    :param extension: extension of file `file_name`
-    '''
     text = ''
     if extension == '.pdf':
         for page in extract_text_from_pdf(file_path):
@@ -173,16 +142,8 @@ def extract_text(file_path, extension):
     return text
 
 
-def extract_entity_sections_grad(text):
-    '''
-    Helper function to extract all the raw text from sections of
-    resume specifically for graduates and undergraduates
-
-    :param text: Raw text of resume
-    :return: dictionary of entities
-    '''
+def extract_entity_sections_grad(text):   
     text_split = [i.strip() for i in text.split('\n')]
-    # sections_in_resume = [i for i in text_split if i.lower() in sections]
     entities = {}
     key = False
     for phrase in text_split:
@@ -211,12 +172,12 @@ def extract_entity_sections_grad(text):
     #             sub_entities[entity_key].append(entry)
     #     entities[entity] = sub_entities
 
-    # pprint.pprint(entities)
-
     # make entities that are not found None
     # for entity in cs.RESUME_SECTIONS:
     #     if entity not in entities.keys():
     #         entities[entity] = None
+
+    print(entities)
     return entities
 
 
@@ -322,11 +283,6 @@ def extract_entity_sections_professional(text):
 
 
 def extract_email(text):
-    '''
-    Helper function to extract email id from text
-
-    :param text: plain text extracted from resume file
-    '''
     email = re.findall(r"([^@|\s]+@[^@]+\.[^@|\s]+)", text)
     if email:
         try:
@@ -336,13 +292,6 @@ def extract_email(text):
 
 
 def extract_name(nlp_text, matcher):
-    '''
-    Helper function to extract name from spacy nlp text
-
-    :param nlp_text: object of `spacy.tokens.doc.Doc`
-    :param matcher: object of `spacy.matcher.Matcher`
-    :return: string of full name
-    '''
     pattern = [cs.NAME_PATTERN]
 
     matcher.add('NAME', pattern)
@@ -356,14 +305,6 @@ def extract_name(nlp_text, matcher):
 
 
 def extract_mobile_number(text, custom_regex=None):
-    '''
-    Helper function to extract mobile number from text
-
-    :param text: plain text extracted from resume file
-    :return: string of extracted mobile numbers
-    '''
-    # Found this complicated regex on :
-    # https://zapier.com/blog/extract-links-email-phone-regex/
     # mob_num_regex = r'''(?:(?:\+?([1-9]|[0-9][0-9]|
     #     [0-9][0-9][0-9])\s*(?:[.-]\s*)?)?(?:\(\s*([2-9]1[02-9]|
     #     [2-9][02-8]1|[2-9][02-8][02-9])\s*\)|([0-9][1-9]|
@@ -428,7 +369,6 @@ def extract_education(nlp_text):
              else only returns education degree
     '''
     edu = {}
-    # Extract education degree
     try:
         for index, text in enumerate(nlp_text):
             for tex in text.split():
@@ -499,8 +439,6 @@ def extract_experience(resume_text):
     return x
 
 
-import re
-
 def extract_projects(resume_text):
     """
     Extracts all text under the 'Projects' section until the next section header.
@@ -520,117 +458,94 @@ def extract_projects(resume_text):
     return ""
 
 
+def extract_achievements(resume_lines):
+    
+    print(resume_lines)
 
-def extract_achievements(resume_text):
-    """
-    Extract achievements and awards as structured data.
-    Splits by bullets (•) or numbered points, 
-    captures sub-points (–) as 'details'.
-    Returns list of dicts: [{'title': str, 'details': [str, ...]}, ...]
-    """
-    section_pattern = re.compile(
-        r'(' + '|'.join(map(re.escape, cs.ACHIEVEMENTS_KEYWORDS)) + r')',
-        re.IGNORECASE
-    )
-    lines = resume_text.splitlines()
+    if isinstance(resume_lines, str):
+        lines = resume_lines.splitlines()
+    else:
+        lines = resume_lines
+
     achievements = []
-    in_section = False
     current_item = None
+
+    # Regex to detect dates like "Aug 2023", "July 2025", "Feb 2024 - Present"
+    date_pattern = re.compile(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{4}\b|\b\d{4}\b', re.IGNORECASE)
 
     for line in lines:
         clean_line = line.strip()
 
-        # Detect start of Achievements section
-        if section_pattern.search(clean_line):
-            in_section = True
+        # Skip empty lines or date-only lines
+        if not clean_line or date_pattern.fullmatch(clean_line):
             continue
 
-        if in_section:
-            # End section if another heading is found
-            if clean_line and clean_line.isupper() and len(clean_line.split()) < 5:
-                if current_item:
-                    achievements.append(current_item)
-                    current_item = None
-                break
+        # Bullet point (new achievement)
+        if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
+            if current_item:
+                achievements.append(current_item)
+            title = clean_line.lstrip("•").strip()
+            current_item = {"title": title, "details": []}
 
-            # Bullet point (new achievement title)
-            if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
-                if current_item:
-                    achievements.append(current_item)
-                title = clean_line.lstrip("•").strip()
-                current_item = {"title": title, "details": []}
+        # Sub-detail line (starts with – or -)
+        elif clean_line.startswith("–") or clean_line.startswith("-"):
+            if current_item:
+                current_item["details"].append(clean_line.lstrip("–-").strip())
 
-            # Sub-detail line (– or normal text)
-            elif clean_line.startswith("–") or clean_line.startswith("-"):
-                if current_item:
-                    current_item["details"].append(clean_line.lstrip("–-").strip())
+        # Continuation text (append to last detail)
+        else:
+            if current_item:
+                if not current_item["details"]:
+                    current_item["details"].append(clean_line)
+                else:
+                    current_item["details"][-1] += " " + clean_line
 
-            # Continuation text
-            elif clean_line:
-                if current_item:
-                    if not current_item["details"]:
-                        current_item["details"].append(clean_line)
-                    else:
-                        current_item["details"][-1] += " " + clean_line
-
+    # Append last achievement
     if current_item:
         achievements.append(current_item)
 
     return achievements
 
-def extract_responsibilities(resume_text):
-    """
-    Extract positions and responsibilities as structured data.
-    Splits by bullets (•) or numbered points, 
-    captures sub-points (–) as 'details'.
-    Returns list of dicts: [{'title': str, 'details': [str, ...]}, ...]
-    """
-    section_pattern = re.compile(
-        r'(' + '|'.join(map(re.escape, cs.POSITIONS_KEYWORDS)) + r')',
-        re.IGNORECASE
-    )
-    lines = resume_text.splitlines()
+
+def extract_responsibilities(resume_lines):
+    print(resume_lines)
+
+    if isinstance(resume_lines, str):
+        lines = resume_lines.splitlines()
+    else:
+        lines = resume_lines
+
     responsibilities = []
-    in_section = False
     current_item = None
+
+    date_pattern = re.compile(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{4}\b|\b\d{4}\b', re.IGNORECASE)
 
     for line in lines:
         clean_line = line.strip()
 
-        # Detect start of Achievements section
-        if section_pattern.search(clean_line):
-            in_section = True
+        if not clean_line or date_pattern.fullmatch(clean_line):
             continue
 
-        if in_section:
-            # End section if another heading is found
-            if clean_line and clean_line.isupper() and len(clean_line.split()) < 5:
-                if current_item:
-                    responsibilities.append(current_item)
-                    current_item = None
-                break
+        if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
+            if current_item:
+                responsibilities.append(current_item)
+            title = clean_line.lstrip("•").strip()
+            current_item = {"title": title, "details": []}
 
-            # Bullet point (new achievement title)
-            if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
-                if current_item:
-                    responsibilities.append(current_item)
-                title = clean_line.lstrip("•").strip()
-                current_item = {"title": title, "details": []}
+        elif clean_line.startswith("–") or clean_line.startswith("-"):
+            if current_item:
+                current_item["details"].append(clean_line.lstrip("–-").strip())
 
-            # Sub-detail line (– or normal text)
-            elif clean_line.startswith("–") or clean_line.startswith("-"):
-                if current_item:
-                    current_item["details"].append(clean_line.lstrip("–-").strip())
-
-            # Continuation text
-            elif clean_line:
-                if current_item:
-                    if not current_item["details"]:
-                        current_item["details"].append(clean_line)
-                    else:
-                        current_item["details"][-1] += " " + clean_line
+        else:
+            if current_item:
+                if not current_item["details"]:
+                    current_item["details"].append(clean_line)
+                else:
+                    current_item["details"][-1] += " " + clean_line
 
     if current_item:
         responsibilities.append(current_item)
 
     return responsibilities
+
+

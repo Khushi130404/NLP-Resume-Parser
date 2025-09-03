@@ -55,8 +55,12 @@ RESUME_SECTIONS_GRAD = [
                     'publications',
                     'skills',
                     'certifications',
+                    'leadership',
+                    'achievements',
+                    'awards',
+                    'positions',
+                    'responsibility',
                     'objective',
                     'career objective',
                     'summary',
-                    'leadership'
                 ]
