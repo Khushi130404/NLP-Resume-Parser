@@ -30,6 +30,13 @@ ACHIEVEMENTS_KEYWORDS = ["achievements", "awards", "honors", "recognition", "cer
 
 POSITIONS_KEYWORDS = ["positions","responsibility","coordinator"]
 
+USERNAME_KEYWORDS = [
+    "github", "leetcode", "linkedin", "gfg", "geeksforgeeks", 
+    "kaggle", "stackoverflow", "codeforces", "codechef", 
+    "hackerrank", "medium", "twitter", "x.com", "instagram", 
+    "facebook", "dev.to", "gitlab", "reddit"
+]
+
 RESUME_SECTIONS_PROFESSIONAL = [
                     'experience',
                     'education',

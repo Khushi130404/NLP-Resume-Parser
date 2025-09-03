@@ -125,6 +125,11 @@ class ResumeParser(object):
             self.__details['experience'] = entities['experience']
 
         try:
+            self.__details['links'] = utils.extract_usernames(utils.extract_links_from_pdf(self.__resume))
+        except KeyError:
+            pass
+
+        try:
             exp = round(
                 utils.get_total_experience(entities['experience']) / 12,
                 2

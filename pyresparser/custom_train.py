@@ -43,7 +43,6 @@ def convert_dataturks_to_spacy(filepath):
         training_data.append((text, {"entities": entities}))
     return training_data
 
-# Load your dataset
 TRAIN_DATA = trim_entity_spans(convert_dataturks_to_spacy("traindata.json"))
 
 def train_ner(model=None, output_dir="./resume_model", n_iter=30):
@@ -63,7 +62,6 @@ def train_ner(model=None, output_dir="./resume_model", n_iter=30):
         for ent in annotations.get("entities"):
             ner.add_label(ent[2])
 
-    # Convert training data to spaCy Example objects
     examples = []
     for text, annots in TRAIN_DATA:
         doc = nlp.make_doc(text)
@@ -79,12 +77,10 @@ def train_ner(model=None, output_dir="./resume_model", n_iter=30):
                 nlp.update(batch, drop=0.2, losses=losses)
             print(f"Iteration {i+1} Losses: {losses}")
 
-    # Test model
     test_text = "Marathwada Mitra Mandals College of Engineering"
     doc = nlp(test_text)
     print("Entities:", [(ent.text, ent.label_) for ent in doc.ents])
 
-    # Save model
     output_dir = Path(output_dir)
     nlp.to_disk(output_dir)
     print(f"Model saved to {output_dir}")

@@ -3,6 +3,7 @@ import io
 import os
 import re
 import nltk
+import fitz
 import re
 import pandas as pd
 import docx2txt
@@ -586,4 +587,26 @@ def extract_responsibilities(resume_lines):
 
     return responsibilities
 
+def extract_links_from_pdf(path):
+    doc = fitz.open(path)
+    links = []
+    for page in doc:
+        for link in page.get_links():
+            if "uri" in link:
+                links.append(link["uri"])
+    return links
 
+def extract_usernames(links):
+    result = {}
+    for link in links:
+        if link.startswith("mailto:"):
+            continue  
+        for keyword in cs.USERNAME_KEYWORDS:
+            if keyword in link:
+                username = link.rstrip("/").split("/")[-1]
+                platform = keyword.capitalize()
+                result[platform] = username
+                break
+        else:
+            result.setdefault("Other", []).append(link)
+    return result
