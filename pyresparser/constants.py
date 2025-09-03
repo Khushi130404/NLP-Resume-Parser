@@ -15,15 +15,13 @@ YEAR = r'(((20|19)(\d{2})))'
 
 STOPWORDS = set(stopwords.words('english'))
 
-# ---------------------- Education Keywords ---------------------- #
+
 EDUCATION_KEYWORDS = [
-    'BE', 'B.E.', 'B.E', 'BS', 'B.S', 'ME', 'M.E', 'M.E.', 'MS', 'M.S',
-    'BTECH', 'B.TECH', 'MTECH', 'M.TECH', 'MBA', 'PH.D', 'PHD',
-    'SSC', 'HSC', 'CBSE', 'ICSE', 'X', 'XII', 'DIPLOMA', 'DEGREE',
-    'COURSES', 'TRAINING', 'CERTIFICATIONS'
+    'education','diploma', 'degree',
+    'courses', 'certifications'
 ]
 
-# ---------------------- Section-Specific Keywords ---------------------- #
+
 PROJECTS_KEYWORDS = [
     "projects", "academic projects", "key projects", "capstone", 
     "personal projects", "major projects", "minor projects"
