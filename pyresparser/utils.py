@@ -390,53 +390,97 @@ def extract_education(nlp_text):
     return education
 
 
-def extract_experience(resume_text):
-    '''
-    Helper function to extract experience from resume text
+# def extract_experience(resume_text):
+#     '''
+#     Helper function to extract experience from resume text
 
-    :param resume_text: Plain resume text
-    :return: list of experience
-    '''
-    wordnet_lemmatizer = WordNetLemmatizer()
-    stop_words = set(stopwords.words('english'))
+#     :param resume_text: Plain resume text
+#     :return: list of experience
+#     '''
+#     wordnet_lemmatizer = WordNetLemmatizer()
+#     stop_words = set(stopwords.words('english'))
 
-    # word tokenization
-    word_tokens = nltk.word_tokenize(resume_text)
+#     # word tokenization
+#     word_tokens = nltk.word_tokenize(resume_text)
 
-    # remove stop words and lemmatize
-    filtered_sentence = [
-            w for w in word_tokens if w not
-            in stop_words and wordnet_lemmatizer.lemmatize(w)
-            not in stop_words
-        ]
-    sent = nltk.pos_tag(filtered_sentence)
+#     # remove stop words and lemmatize
+#     filtered_sentence = [
+#             w for w in word_tokens if w not
+#             in stop_words and wordnet_lemmatizer.lemmatize(w)
+#             not in stop_words
+#         ]
+#     sent = nltk.pos_tag(filtered_sentence)
 
-    # parse regex
-    cp = nltk.RegexpParser('P: {<NNP>+}')
-    cs = cp.parse(sent)
+#     # parse regex
+#     cp = nltk.RegexpParser('P: {<NNP>+}')
+#     cs = cp.parse(sent)
 
-    # for i in cs.subtrees(filter=lambda x: x.label() == 'P'):
-    #     print(i)
+#     # for i in cs.subtrees(filter=lambda x: x.label() == 'P'):
+#     #     print(i)
 
-    test = []
+#     test = []
 
-    for vp in list(
-        cs.subtrees(filter=lambda x: x.label() == 'P')
-    ):
-        test.append(" ".join([
-            i[0] for i in vp.leaves()
-            if len(vp.leaves()) >= 2])
-        )
+#     for vp in list(
+#         cs.subtrees(filter=lambda x: x.label() == 'P')
+#     ):
+#         test.append(" ".join([
+#             i[0] for i in vp.leaves()
+#             if len(vp.leaves()) >= 2])
+#         )
 
-    # Search the word 'experience' in the chunk and
-    # then print out the text after it
-    x = [
-        x[x.lower().index('experience') + 10:]
-        for i, x in enumerate(test)
-        if x and 'experience' in x.lower()
-    ]
-    # return {"experience": resume_text}
-    return x
+#     # Search the word 'experience' in the chunk and
+#     # then print out the text after it
+#     x = [
+#         x[x.lower().index('experience') + 10:]
+#         for i, x in enumerate(test)
+#         if x and 'experience' in x.lower()
+#     ]
+#     # return {"experience": resume_text}
+#     return x
+
+
+def extract_experience(resume_lines):
+    print(resume_lines)
+
+    if isinstance(resume_lines, str):
+        lines = resume_lines.splitlines()
+    else:
+        lines = resume_lines
+
+    experience = []
+    current_item = None
+
+    date_pattern = re.compile(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{4}\b|\b\d{4}\b', re.IGNORECASE)
+
+    for line in lines:
+        clean_line = line.strip()
+
+        if not clean_line or date_pattern.fullmatch(clean_line):
+            continue
+
+        if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
+            if current_item:
+                experience.append(current_item)
+            title = clean_line.lstrip("•").strip()
+            current_item = {"title": title, "details": []}
+
+        elif clean_line.startswith("–") or clean_line.startswith("-"):
+            if current_item:
+                current_item["details"].append(clean_line.lstrip("–-").strip())
+
+        else:
+            if current_item:
+                if not current_item["details"]:
+                    current_item["details"].append(clean_line)
+                else:
+                    current_item["details"][-1] += " " + clean_line
+
+    if current_item:
+        experience.append(current_item)
+
+    return experience
+
+
 
 
 def extract_projects(resume_text):
@@ -470,29 +514,24 @@ def extract_achievements(resume_lines):
     achievements = []
     current_item = None
 
-    # Regex to detect dates like "Aug 2023", "July 2025", "Feb 2024 - Present"
     date_pattern = re.compile(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{4}\b|\b\d{4}\b', re.IGNORECASE)
 
     for line in lines:
         clean_line = line.strip()
 
-        # Skip empty lines or date-only lines
         if not clean_line or date_pattern.fullmatch(clean_line):
             continue
 
-        # Bullet point (new achievement)
         if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
             if current_item:
                 achievements.append(current_item)
             title = clean_line.lstrip("•").strip()
             current_item = {"title": title, "details": []}
 
-        # Sub-detail line (starts with – or -)
         elif clean_line.startswith("–") or clean_line.startswith("-"):
             if current_item:
                 current_item["details"].append(clean_line.lstrip("–-").strip())
 
-        # Continuation text (append to last detail)
         else:
             if current_item:
                 if not current_item["details"]:
@@ -500,7 +539,6 @@ def extract_achievements(resume_lines):
                 else:
                     current_item["details"][-1] += " " + clean_line
 
-    # Append last achievement
     if current_item:
         achievements.append(current_item)
 

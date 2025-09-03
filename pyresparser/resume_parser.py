@@ -102,31 +102,38 @@ class ResumeParser(object):
         except KeyError:
             pass
 
-        try:
-            self.__details['responsibilities'] =  utils.extract_responsibilities(entities['positions'])
-        except KeyError:
-            self.__details['responsibilities'] = entities['positions']
+        # try:
+        #     self.__details['responsibilities'] =  utils.extract_responsibilities(entities['positions'])
+        # except KeyError:
+        #     self.__details['responsibilities'] = entities['positions']
+
+        # try:
+        #     self.__details['achievements'] = utils.extract_achievements(entities['achievements'])
+        # except KeyError:
+        #     self.__details['achievements'] = entities['achievements']
+
+        responsibilities_data = entities.get('positions')
+        self.__details['responsibilities'] = utils.extract_responsibilities(responsibilities_data) if responsibilities_data else []
+
+        achievements_data = entities.get('achievements')
+        self.__details['achievements'] = utils.extract_achievements(achievements_data) if achievements_data else []
+
 
         try:
-            self.__details['achievements'] = utils.extract_achievements(entities['achievements'])
+            self.__details['experience'] = utils.extract_experience(entities['experience'])
         except KeyError:
-            self.__details['achievements'] = entities['achievements']
-
-        try:
             self.__details['experience'] = entities['experience']
-            try:
-                exp = round(
-                    utils.get_total_experience(entities['experience']) / 12,
-                    2
-                )
-                self.__details['total_experience'] = exp
-            except KeyError:
-                self.__details['total_experience'] = 0
+
+        try:
+            exp = round(
+                utils.get_total_experience(entities['experience']) / 12,
+                2
+            )
+            self.__details['total_experience'] = exp
         except KeyError:
             self.__details['total_experience'] = 0
-        self.__details['no_of_pages'] = utils.get_number_of_pages(
-                                            self.__resume
-                                        )
+            
+        self.__details['no_of_pages'] = utils.get_number_of_pages(self.__resume)
         return
 
 
