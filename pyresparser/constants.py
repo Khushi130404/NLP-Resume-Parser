@@ -51,7 +51,23 @@ USERNAME_KEYWORDS = [
     "dribbble", "angel.co"
 ]
 
-# ---------------------- Resume Section Keywords ---------------------- #
+KNOWN_COMPANIES = [
+    "Google", "Microsoft", "Apple", "Amazon", "Meta", "Facebook", "Netflix",
+    "Tesla", "Adobe", "IBM", "Intel", "Oracle", "Samsung", "NVIDIA", "Uber",
+    "Airbnb", "Stripe", "Paypal", "Mastercard", "Visa", "Accenture",
+    "Deloitte", "Infosys", "Wipro", "TCS", "Capgemini", "LinkedIn",
+    "Keshav Encon Pvt Ltd", "Ved Infosys"
+]
+
+JOB_TITLE_KEYWORDS = [
+    "Intern", "Engineer", "Developer", "Manager", "Lead", "Analyst", "Consultant", 
+    "Coordinator", "Supervisor", "Officer", "Administrator","Sales", "Marketing", 
+    "Executive", "Specialist", "Director", "Scientist", "Architect", "Programmer"
+]
+
+
+SPLIT_KEYWORDS = ['•', '-', '*', '–', '●']
+
 RESUME_SECTIONS_PROFESSIONAL = [
     'experience', 'education', 'interests', 'professional experience',
     'publications', 'skills', 'certifications', 'objective',

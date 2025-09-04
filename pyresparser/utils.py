@@ -437,20 +437,32 @@ def extract_education(education_section):
     parsed_education = []
     current_entry = {}
 
-    for item in education_section:
-        clean_item = item.lstrip("•").strip()
+    all_text = " ".join(education_section)
+    bullet_counts = {k: all_text.count(k) for k in cs.SPLIT_KEYWORDS}
+    bullet_counts = {k: v for k, v in bullet_counts.items() if v > 0}
 
-        if "-" in clean_item and any(c.isdigit() for c in clean_item):
+    if bullet_counts:
+        main_bullet = max(bullet_counts, key=bullet_counts.get)
+    else:
+        main_bullet = '•' 
+
+    for item in education_section:
+        clean_item = item.lstrip(main_bullet).strip()
+
+        if any(char.isdigit() for char in clean_item) and any(sep in clean_item for sep in ['-', '–']):
             current_entry["years"] = clean_item
 
-        elif item.startswith("•"):
+        elif item.strip().startswith(main_bullet):
             if current_entry:
                 parsed_education.append(current_entry)
                 current_entry = {}
             current_entry["institution"] = clean_item
 
         else:
-            current_entry["degree"] = clean_item
+            if "degree" in current_entry:
+                current_entry["degree"] += " " + clean_item
+            else:
+                current_entry["degree"] = clean_item
 
     if current_entry:
         parsed_education.append(current_entry)
@@ -458,47 +470,186 @@ def extract_education(education_section):
     return parsed_education
 
 
-def extract_experience(resume_lines):
-    print(resume_lines)
 
-    if isinstance(resume_lines, str):
-        lines = resume_lines.splitlines()
-    else:
-        lines = resume_lines
+# def extract_education(education_section):
+#     parsed_education = []
+#     current_entry = {}
 
-    experience = []
-    current_item = None
+#     for item in education_section:
+#         clean_item = item.lstrip("•").strip()
 
-    date_pattern = re.compile(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{4}\b|\b\d{4}\b', re.IGNORECASE)
+#         if "-" in clean_item and any(c.isdigit() for c in clean_item):
+#             current_entry["years"] = clean_item
 
-    for line in lines:
-        clean_line = line.strip()
+#         elif item.startswith("•"):
+#             if current_entry:
+#                 parsed_education.append(current_entry)
+#                 current_entry = {}
+#             current_entry["institution"] = clean_item
 
-        if not clean_line or date_pattern.fullmatch(clean_line):
+#         else:
+#             current_entry["degree"] = clean_item
+
+#     if current_entry:
+#         parsed_education.append(current_entry)
+
+#     return parsed_education
+
+
+# import re
+
+# COMPANY_HINTS = [
+#     "Inc", "Ltd", "LLC", "Corp", "Company", "Technologies", "Solutions",
+#     "Systems", "Pvt", "Limited", "Group", "Labs", "Global"
+# ]
+# KNOWN_COMPANIES = [
+#     "Google", "Microsoft", "Apple", "Amazon", "Meta", "Facebook", "Netflix",
+#     "Tesla", "Adobe", "IBM", "Intel", "Oracle", "Samsung", "NVIDIA", "Uber",
+#     "Airbnb", "Stripe", "Paypal", "Mastercard", "Visa", "Accenture",
+#     "Deloitte", "Infosys", "Wipro", "TCS", "Capgemini", "LinkedIn"
+# ]
+
+# SPLIT_KEYWORDS = ['•', '*', '●']  # Only strong section markers
+
+# def is_company_line(line):
+#     """Decide if a line looks like a company/title/date line."""
+#     # If known company name
+#     if any(re.search(rf"\b{c}\b", line, re.IGNORECASE) for c in KNOWN_COMPANIES):
+#         return True
+#     # Common company suffixes
+#     if any(hint in line for hint in COMPANY_HINTS):
+#         return True
+#     # Short line with a year (date marker)
+#     if len(line.split()) <= 8 and re.search(r"\d{4}", line):
+#         return True
+#     return False
+
+# def extract_experience(text):
+#     if isinstance(text, list):
+#         text = "\n".join(text)
+
+#     # Clean up multiple newlines and bullet separators
+#     text = re.sub(r'\n+', '\n', text)  # Normalize newlines
+#     sections = re.split(r'[' + re.escape(''.join(SPLIT_KEYWORDS)) + r']', text)
+
+#     experiences = []
+#     current_exp = None
+
+#     for raw_line in sections:
+#         line = raw_line.strip()
+#         if not line:
+#             continue
+
+#         if is_company_line(line):
+#             # Save previous entry
+#             if current_exp:
+#                 experiences.append(current_exp)
+#             # Start new experience
+#             current_exp = {"company": line, "title": "", "details": ""}
+#         else:
+#             # This is details text
+#             if current_exp:
+#                 if not current_exp["details"]:
+#                     current_exp["details"] = line
+#                 else:
+#                     current_exp["details"] += " " + line
+
+#     # Append last experience
+#     if current_exp:
+#         experiences.append(current_exp)
+
+#     return experiences
+
+def extract_experience(text):
+    if isinstance(text, list):
+        text = "\n".join(text)
+
+    SPLIT_KEYWORDS = ['•', '*', '●']
+
+    # Split by main bullets
+    sections = re.split(r'[' + re.escape(''.join(SPLIT_KEYWORDS)) + r']', text)
+    experiences = []
+
+    for section in sections:
+        lines = [line.strip() for line in section.strip().split("\n") if line.strip()]
+        if not lines:
             continue
 
-        if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
-            if current_item:
-                experience.append(current_item)
-            title = clean_line.lstrip("•").strip()
-            current_item = {"title": title, "details": []}
+        company = ""
+        title = ""
+        details = ""
 
-        elif clean_line.startswith("–") or clean_line.startswith("-"):
-            if current_item:
-                current_item["details"].append(clean_line.lstrip("–-").strip())
-
+        # Detect company: first line containing known company or line with "Ltd"/"Inc"/etc.
+        for i, line in enumerate(lines):
+            if any(re.search(rf"\b{c}\b", line, re.IGNORECASE) for c in cs.KNOWN_COMPANIES) \
+                or any(suffix in line for suffix in ["Inc", "Ltd", "LLC", "Corp", "Pvt", "Limited", "Group", "Technologies"]):
+                company = line
+                remaining_lines = lines[i+1:]
+                break
         else:
-            if current_item:
-                if not current_item["details"]:
-                    current_item["details"].append(clean_line)
-                else:
-                    current_item["details"][-1] += " " + clean_line
+            remaining_lines = lines
 
-    if current_item:
-        experience.append(current_item)
+        # Detect job title in remaining lines
+        for i, line in enumerate(remaining_lines):
+            if any(keyword.lower() in line.lower() for keyword in cs.JOB_TITLE_KEYWORDS):
+                title = line
+                details_lines = remaining_lines[i+1:]
+                break
+        else:
+            details_lines = remaining_lines
 
-    return experience
+        # Join remaining lines as details
+        details = " ".join(details_lines)
 
+        experiences.append({
+            "company": company,
+            "title": title,
+            "details": details
+        })
+
+    return experiences
+
+
+# def extract_experience(resume_lines):
+#     print(resume_lines)
+
+#     if isinstance(resume_lines, str):
+#         lines = resume_lines.splitlines()
+#     else:
+#         lines = resume_lines
+
+#     experience = []
+#     current_item = None
+
+#     date_pattern = re.compile(r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[a-z]*\s+\d{4}\b|\b\d{4}\b', re.IGNORECASE)
+
+#     for line in lines:
+#         clean_line = line.strip()
+
+#         if not clean_line or date_pattern.fullmatch(clean_line):
+#             continue
+
+#         if clean_line.startswith("•") or re.match(r"^\d+\.", clean_line):
+#             if current_item:
+#                 experience.append(current_item)
+#             title = clean_line.lstrip("•").strip()
+#             current_item = {"title": title, "details": []}
+
+#         elif clean_line.startswith("–") or clean_line.startswith("-"):
+#             if current_item:
+#                 current_item["details"].append(clean_line.lstrip("–-").strip())
+
+#         else:
+#             if current_item:
+#                 if not current_item["details"]:
+#                     current_item["details"].append(clean_line)
+#                 else:
+#                     current_item["details"][-1] += " " + clean_line
+
+#     if current_item:
+#         experience.append(current_item)
+
+#     return experience
 
 
 
@@ -628,6 +779,56 @@ def extract_usernames(links):
         else:
             result.setdefault("Other", []).append(link)
     return result
+
+
+import re
+
+# Keywords that usually indicate the project section
+PROJECT_KEYWORDS = [
+    'projects', 'project', 'academic projects', 'personal projects', 'capstone projects', 'minor projects'
+]
+
+# Keywords that usually indicate the start of another section
+SECTION_KEYWORDS = [
+    'experience', 'education', 'skills', 'achievements', 'certifications', 'positions', 'responsibilities', 'summary', 'interests'
+]
+
+def extract_project_section(resume_text):
+    """
+    Extracts the project section from the resume text.
+    
+    Args:
+        resume_text (str or list): Resume text as a string or list of lines.
+        
+    Returns:
+        list: Lines that belong to the project section.
+    """
+    # Ensure resume_text is a list of lines
+    if isinstance(resume_text, str):
+        lines = resume_text.splitlines()
+    else:
+        lines = resume_text
+
+    project_section = []
+    in_project_section = False
+
+    for line in lines:
+        clean_line = line.strip().lower()
+        
+        # Detect the start of the project section
+        if any(keyword in clean_line for keyword in PROJECT_KEYWORDS):
+            in_project_section = True
+            continue  # Skip the heading itself
+
+        # Stop if another section starts
+        if in_project_section and any(keyword in clean_line for keyword in SECTION_KEYWORDS):
+            break
+
+        # Collect lines inside project section
+        if in_project_section and clean_line:
+            project_section.append(line.strip())
+
+    return project_section
 
 
 def find_section_key_by_keywords(entities, keywords):

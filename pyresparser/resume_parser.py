@@ -84,10 +84,7 @@ class ResumeParser(object):
             entities, cs.EDUCATION_KEYWORDS, utils.extract_education
         )
 
-        self.__details['projects'] = utils.safe_parse_by_keywords(
-            entities, cs.PROJECTS_KEYWORDS
-        )
-
+        self.__details['projects'] = utils.extract_project_section(self.__text_raw)
 
         # print("**************************************************************************************")
 
