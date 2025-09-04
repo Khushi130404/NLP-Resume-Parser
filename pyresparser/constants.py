@@ -1,4 +1,5 @@
 from nltk.corpus import stopwords
+import re
 
 # ---------------------- Basic Patterns ---------------------- #
 NAME_PATTERN = [{'POS': 'PROPN'}, {'POS': 'PROPN'}]
@@ -64,6 +65,24 @@ JOB_TITLE_KEYWORDS = [
     "Coordinator", "Supervisor", "Officer", "Administrator","Sales", "Marketing", 
     "Executive", "Specialist", "Director", "Scientist", "Architect", "Programmer"
 ]
+
+
+PROJECT_KEYWORDS = [
+    'projects', 'project', 'academic projects', 'personal projects', 'capstone projects', 'minor projects'
+]
+
+SECTION_KEYWORDS = [
+    'experience', 'education', 'skills', 'achievements', 'certifications', 'positions', 'responsibilities', 'summary', 'interests'
+]
+
+DATE_PATTERN = re.compile(
+    r'^(?:'
+    r'(?:Jan|Feb|Mar|March|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s?\d{4}' 
+    r'|\d{4}'  
+    r')'
+    r'(?:\s?-\s?(?:Jan|Feb|Mar|March|Apr|May|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)?\s?\d{4})?$',
+    re.IGNORECASE
+)
 
 
 SPLIT_KEYWORDS = ['•', '-', '*', '–', '●']

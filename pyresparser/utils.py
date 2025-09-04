@@ -361,78 +361,6 @@ def cleanup(token, lower=True):
     return token.strip()
 
 
-# def extract_education(nlp_text):
-#     edu = {}
-#     try:
-#         for index, text in enumerate(nlp_text):
-#             for tex in text.split():
-#                 tex = re.sub(r'[?|$|.|!|,]', r'', tex)
-#                 if tex.upper() in cs.EDUCATION and tex not in cs.STOPWORDS:
-#                     edu[tex] = text + nlp_text[index + 1]
-#     except IndexError:
-#         pass
-
-#     # Extract year
-#     education = []
-#     for key in edu.keys():
-#         year = re.search(re.compile(cs.YEAR), edu[key])
-#         if year:
-#             education.append((key, ''.join(year.group(0))))
-#         else:
-#             education.append(key)
-
-#     return education
-
-
-# def extract_experience(resume_text):
-#     '''
-#     Helper function to extract experience from resume text
-
-#     :param resume_text: Plain resume text
-#     :return: list of experience
-#     '''
-#     wordnet_lemmatizer = WordNetLemmatizer()
-#     stop_words = set(stopwords.words('english'))
-
-#     # word tokenization
-#     word_tokens = nltk.word_tokenize(resume_text)
-
-#     # remove stop words and lemmatize
-#     filtered_sentence = [
-#             w for w in word_tokens if w not
-#             in stop_words and wordnet_lemmatizer.lemmatize(w)
-#             not in stop_words
-#         ]
-#     sent = nltk.pos_tag(filtered_sentence)
-
-#     # parse regex
-#     cp = nltk.RegexpParser('P: {<NNP>+}')
-#     cs = cp.parse(sent)
-
-#     # for i in cs.subtrees(filter=lambda x: x.label() == 'P'):
-#     #     print(i)
-
-#     test = []
-
-#     for vp in list(
-#         cs.subtrees(filter=lambda x: x.label() == 'P')
-#     ):
-#         test.append(" ".join([
-#             i[0] for i in vp.leaves()
-#             if len(vp.leaves()) >= 2])
-#         )
-
-#     # Search the word 'experience' in the chunk and
-#     # then print out the text after it
-#     x = [
-#         x[x.lower().index('experience') + 10:]
-#         for i, x in enumerate(test)
-#         if x and 'experience' in x.lower()
-#     ]
-#     # return {"experience": resume_text}
-#     return x
-
-
 def extract_education(education_section):
     parsed_education = []
     current_entry = {}
@@ -468,32 +396,6 @@ def extract_education(education_section):
         parsed_education.append(current_entry)
 
     return parsed_education
-
-
-
-# def extract_education(education_section):
-#     parsed_education = []
-#     current_entry = {}
-
-#     for item in education_section:
-#         clean_item = item.lstrip("•").strip()
-
-#         if "-" in clean_item and any(c.isdigit() for c in clean_item):
-#             current_entry["years"] = clean_item
-
-#         elif item.startswith("•"):
-#             if current_entry:
-#                 parsed_education.append(current_entry)
-#                 current_entry = {}
-#             current_entry["institution"] = clean_item
-
-#         else:
-#             current_entry["degree"] = clean_item
-
-#     if current_entry:
-#         parsed_education.append(current_entry)
-
-#     return parsed_education
 
 
 # import re
@@ -560,13 +462,17 @@ def extract_education(education_section):
 
 #     return experiences
 
+
+
+import re
+
 def extract_experience(text):
     if isinstance(text, list):
         text = "\n".join(text)
 
     SPLIT_KEYWORDS = ['•', '*', '●']
 
-    # Split by main bullets
+    # Split main sections by SPLIT_KEYWORDS (each section = one company experience)
     sections = re.split(r'[' + re.escape(''.join(SPLIT_KEYWORDS)) + r']', text)
     experiences = []
 
@@ -577,9 +483,9 @@ def extract_experience(text):
 
         company = ""
         title = ""
-        details = ""
+        details_lines = []
 
-        # Detect company: first line containing known company or line with "Ltd"/"Inc"/etc.
+        # Detect company
         for i, line in enumerate(lines):
             if any(re.search(rf"\b{c}\b", line, re.IGNORECASE) for c in cs.KNOWN_COMPANIES) \
                 or any(suffix in line for suffix in ["Inc", "Ltd", "LLC", "Corp", "Pvt", "Limited", "Group", "Technologies"]):
@@ -589,7 +495,7 @@ def extract_experience(text):
         else:
             remaining_lines = lines
 
-        # Detect job title in remaining lines
+        # Detect title
         for i, line in enumerate(remaining_lines):
             if any(keyword.lower() in line.lower() for keyword in cs.JOB_TITLE_KEYWORDS):
                 title = line
@@ -598,16 +504,18 @@ def extract_experience(text):
         else:
             details_lines = remaining_lines
 
-        # Join remaining lines as details
-        details = " ".join(details_lines)
+        # Keep each detail line together (no splitting by punctuation)
+        details_array = [line for line in details_lines if line]
 
         experiences.append({
             "company": company,
             "title": title,
-            "details": details
+            "details": details_array
         })
 
     return experiences
+
+
 
 
 # def extract_experience(resume_lines):
@@ -650,26 +558,6 @@ def extract_experience(text):
 #         experience.append(current_item)
 
 #     return experience
-
-
-
-def extract_projects(resume_text):
-    """
-    Extracts all text under the 'Projects' section until the next section header.
-    Returns a single string with all project content combined.
-    """
-
-    # Define common section headers that indicate the end of the Projects section
-    section_headers = r"(experience|work experience|skills|education|certifications|achievements|summary|profile|objective)"
-    
-    # Regex to capture everything under 'Projects' until the next section header
-    pattern = rf"projects\s*[:\-]?\s*(.*?)\s*(?={section_headers}|$)"
-
-    match = re.search(pattern, resume_text, re.IGNORECASE | re.DOTALL)
-    
-    if match:
-        return match.group(1).strip()
-    return ""
 
 
 def extract_achievements(resume_lines):
@@ -780,30 +668,7 @@ def extract_usernames(links):
             result.setdefault("Other", []).append(link)
     return result
 
-
-import re
-
-# Keywords that usually indicate the project section
-PROJECT_KEYWORDS = [
-    'projects', 'project', 'academic projects', 'personal projects', 'capstone projects', 'minor projects'
-]
-
-# Keywords that usually indicate the start of another section
-SECTION_KEYWORDS = [
-    'experience', 'education', 'skills', 'achievements', 'certifications', 'positions', 'responsibilities', 'summary', 'interests'
-]
-
 def extract_project_section(resume_text):
-    """
-    Extracts the project section from the resume text.
-    
-    Args:
-        resume_text (str or list): Resume text as a string or list of lines.
-        
-    Returns:
-        list: Lines that belong to the project section.
-    """
-    # Ensure resume_text is a list of lines
     if isinstance(resume_text, str):
         lines = resume_text.splitlines()
     else:
@@ -813,22 +678,50 @@ def extract_project_section(resume_text):
     in_project_section = False
 
     for line in lines:
-        clean_line = line.strip().lower()
-        
-        # Detect the start of the project section
-        if any(keyword in clean_line for keyword in PROJECT_KEYWORDS):
-            in_project_section = True
-            continue  # Skip the heading itself
+        clean_line = line.strip()
+        lower_line = clean_line.lower()
 
-        # Stop if another section starts
-        if in_project_section and any(keyword in clean_line for keyword in SECTION_KEYWORDS):
+        if any(keyword in lower_line for keyword in cs.PROJECT_KEYWORDS):
+            in_project_section = True
+            continue
+
+        if in_project_section and any(keyword in lower_line for keyword in cs.SECTION_KEYWORDS):
             break
 
-        # Collect lines inside project section
-        if in_project_section and clean_line:
-            project_section.append(line.strip())
+        if in_project_section:
+            if (clean_line 
+                and not re.search(r'cgpa|percentile|rank|grade', lower_line)
+                and not cs.DATE_PATTERN.fullmatch(clean_line)):
+                project_section.append(clean_line)
 
     return project_section
+
+
+def extract_projects(project_lines):
+    projects = []
+    current_project = None
+
+    for line in project_lines:
+        clean_line = line.strip()
+        if not clean_line:
+            continue
+
+        # Start of a new project
+        if clean_line.startswith("•"):
+            # Save previous project
+            if current_project:
+                projects.append(current_project)
+            current_project = {"project_name": clean_line.lstrip("•").strip(), "details": []}
+        else:
+            # Append all other lines to details
+            if current_project:
+                current_project["details"].append(clean_line)
+
+    # Append the last project
+    if current_project:
+        projects.append(current_project)
+
+    return projects
 
 
 def find_section_key_by_keywords(entities, keywords):
