@@ -178,18 +178,12 @@ def extract_entity_sections_grad(text):
     #     if entity not in entities.keys():
     #         entities[entity] = None
 
-    print(entities)
+    # print(entities)
     return entities
 
 
 def extract_entities_wih_custom_model(custom_nlp_text):
-    '''
-    Helper function to extract different entities with custom
-    trained model using SpaCy's NER
-
-    :param custom_nlp_text: object of `spacy.tokens.doc.Doc`
-    :return: dictionary of entities
-    '''
+    
     entities = {}
     for ent in custom_nlp_text.ents:
         if ent.label_ not in entities.keys():
@@ -202,12 +196,7 @@ def extract_entities_wih_custom_model(custom_nlp_text):
 
 
 def get_total_experience(experience_list):
-    '''
-    Wrapper function to extract total months of experience from a resume
-
-    :param experience_list: list of experience text extracted
-    :return: total months of experience
-    '''
+   
     exp_ = []
     for line in experience_list:
         experience = re.search(
@@ -225,13 +214,7 @@ def get_total_experience(experience_list):
 
 
 def get_number_of_months_from_dates(date1, date2):
-    '''
-    Helper function to extract total months of experience from a resume
-
-    :param date1: Starting date
-    :param date2: Ending date
-    :return: months of experience from date1 to date2
-    '''
+   
     if date2.lower() == 'present':
         date2 = datetime.now().strftime('%b %Y')
     try:
@@ -255,13 +238,7 @@ def get_number_of_months_from_dates(date1, date2):
 
 
 def extract_entity_sections_professional(text):
-    '''
-    Helper function to extract all the raw text from sections of
-    resume specifically for professionals
-
-    :param text: Raw text of resume
-    :return: dictionary of entities
-    '''
+    
     text_split = [i.strip() for i in text.split('\n')]
     entities = {}
     key = False
@@ -326,13 +303,7 @@ def extract_mobile_number(text, custom_regex=None):
 
 
 def extract_skills(nlp_text, noun_chunks, skills_file=None):
-    '''
-    Helper function to extract skills from spacy nlp text
-
-    :param nlp_text: object of `spacy.tokens.doc.Doc`
-    :param noun_chunks: noun chunks extracted from nlp text
-    :return: list of skills extracted
-    '''
+   
     tokens = [token.text for token in nlp_text if not token.is_stop]
     if not skills_file:
         data = pd.read_csv(
@@ -464,15 +435,12 @@ def extract_education(education_section):
 
 
 
-import re
-
 def extract_experience(text):
     if isinstance(text, list):
         text = "\n".join(text)
 
     SPLIT_KEYWORDS = ['•', '*', '●']
 
-    # Split main sections by SPLIT_KEYWORDS (each section = one company experience)
     sections = re.split(r'[' + re.escape(''.join(SPLIT_KEYWORDS)) + r']', text)
     experiences = []
 
@@ -485,7 +453,6 @@ def extract_experience(text):
         title = ""
         details_lines = []
 
-        # Detect company
         for i, line in enumerate(lines):
             if any(re.search(rf"\b{c}\b", line, re.IGNORECASE) for c in cs.KNOWN_COMPANIES) \
                 or any(suffix in line for suffix in ["Inc", "Ltd", "LLC", "Corp", "Pvt", "Limited", "Group", "Technologies"]):
@@ -495,7 +462,6 @@ def extract_experience(text):
         else:
             remaining_lines = lines
 
-        # Detect title
         for i, line in enumerate(remaining_lines):
             if any(keyword.lower() in line.lower() for keyword in cs.JOB_TITLE_KEYWORDS):
                 title = line
@@ -504,7 +470,6 @@ def extract_experience(text):
         else:
             details_lines = remaining_lines
 
-        # Keep each detail line together (no splitting by punctuation)
         details_array = [line for line in details_lines if line]
 
         experiences.append({
@@ -644,14 +609,25 @@ def extract_responsibilities(resume_lines):
 
     return responsibilities
 
+
 def extract_links_from_pdf(path):
     doc = fitz.open(path)
     links = []
+    seen_domains = set() 
+
     for page in doc:
         for link in page.get_links():
             if "uri" in link:
-                links.append(link["uri"])
+                url = link["uri"]
+
+                domain = url.split("/")[2] if "//" in url else url
+
+                if domain not in seen_domains:
+                    links.append(url)
+                    seen_domains.add(domain)
+
     return links
+
 
 def extract_usernames(links):
     result = {}
@@ -706,18 +682,14 @@ def extract_projects(project_lines):
         if not clean_line:
             continue
 
-        # Start of a new project
         if clean_line.startswith("•"):
-            # Save previous project
             if current_project:
                 projects.append(current_project)
             current_project = {"project_name": clean_line.lstrip("•").strip(), "details": []}
         else:
-            # Append all other lines to details
             if current_project:
                 current_project["details"].append(clean_line)
 
-    # Append the last project
     if current_project:
         projects.append(current_project)
 
@@ -725,18 +697,14 @@ def extract_projects(project_lines):
 
 
 def find_section_key_by_keywords(entities, keywords):
-    """
-    Find the first matching key from entities based on a keyword list.
-    """
+   
     for key in entities.keys():
         if any(k.lower() in key.lower() for k in keywords):
             return key
     return None
 
 def safe_parse_by_keywords(entities, keywords, parser=None):
-    """
-    Parse a resume section by matching keywords from entities.
-    """
+    
     key = find_section_key_by_keywords(entities, keywords)
     if key:
         data = entities.get(key, [])

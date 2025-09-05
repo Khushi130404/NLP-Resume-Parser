@@ -36,7 +36,7 @@ ACHIEVEMENTS_KEYWORDS = [
 
 POSITIONS_KEYWORDS = [
     "positions", "position", "responsibility", "coordinator", "leadership", 
-    "roles", "positions of responsibility", "por", "head", "president", 
+    "roles", "positions of responsibility", "head", "president", 
     "secretary", "team lead", "organizer","training"
 ]
 

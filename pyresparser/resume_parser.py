@@ -80,20 +80,21 @@ class ResumeParser(object):
         self.__details['mobile_number'] = mobile
         self.__details['skills'] = skills
 
+        print("--------------------------------------------------------------------------------")
+
+
         self.__details['education'] = utils.safe_parse_by_keywords(
             entities, cs.EDUCATION_KEYWORDS, utils.extract_education
         )
 
         self.__details['projects'] = utils.extract_projects(utils.extract_project_section(self.__text_raw))
 
-        # print("**************************************************************************************")
-
+        
         self.__details['leadership'] = utils.safe_parse_by_keywords(
             entities, cs.POSITIONS_KEYWORDS, utils.extract_responsibilities
         )
 
-        print("--------------------------------------------------------------------------------")
-
+       
         self.__details['achievements'] = utils.safe_parse_by_keywords(
             entities, cs.ACHIEVEMENTS_KEYWORDS, utils.extract_achievements
         )
@@ -102,14 +103,45 @@ class ResumeParser(object):
             entities, cs.EXPERIENCE_KEYWORDS, utils.extract_experience
         )
 
-        # Links (convert links into username mapping)
+        print("*********************************************************************************")
+
+        # self.__details['education'] = get_section_by_keywords(entities, cs.EDUCATION_KEYWORDS)
+
+        # self.__details['projects'] = utils.extract_project_section(self.__text_raw)
+
+
+        # self.__details['leadership'] = get_section_by_keywords(entities, cs.POSITIONS_KEYWORDS)
+
+        
+        # self.__details['achievements'] = get_section_by_keywords(entities, cs.ACHIEVEMENTS_KEYWORDS)
+
+        # self.__details['experience'] = get_section_by_keywords(entities, cs.EXPERIENCE_KEYWORDS)
+
+        # print("--------------------------------------------------------------------------------")
+
+
         links = utils.extract_links_from_pdf(self.__resume)
         self.__details['links'] = utils.extract_usernames(links) if links else {}
 
-        # Total pages
         self.__details['no_of_pages'] = utils.get_number_of_pages(self.__resume)
 
         return
+
+
+def get_section_by_keywords(entities, keywords):
+    matched_sections = []
+
+    for section_name, section_content in entities.items():
+        section_text = " ".join(section_content) if isinstance(section_content, list) else str(section_content)
+        text = section_text.lower()
+
+        for keyword in keywords:
+            if keyword.lower() in text or keyword.lower() in section_name.lower():
+                print(f"Matched Section: {section_name} with keyword: {keyword}")
+                matched_sections.append(section_content)
+                break
+
+    return matched_sections
 
 
 def resume_result_wrapper(resume):
