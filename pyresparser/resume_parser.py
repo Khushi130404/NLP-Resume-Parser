@@ -117,7 +117,7 @@ class ResumeParser(object):
 
         # self.__details['experience'] = get_section_by_keywords(entities, cs.EXPERIENCE_KEYWORDS)
 
-        # print("--------------------------------------------------------------------------------")
+        print("--------------------------------------------------------------------------------")
 
 
         links = utils.extract_links_from_pdf(self.__resume)

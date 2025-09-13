@@ -17,7 +17,6 @@ def extract_text_from_pdf(pdf_path):
     :param pdf_path: path to PDF file to be extracted (remote or local)
     :return: iterator of string of extracted text
     '''
-    # https://www.blog.pythonlibrary.org/2018/05/03/exporting-data-from-pdfs-with-python/
     if not isinstance(pdf_path, io.BytesIO):
         # extract text from local pdf file
         with open(pdf_path, 'rb') as fh:
